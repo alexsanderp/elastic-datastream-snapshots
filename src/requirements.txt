@@ -1,0 +1,4 @@
+elasticsearch==9.0.2
+python-dotenv==1.1.0
+loguru>=0.7.3
+ecs-logging>=2.2.0
