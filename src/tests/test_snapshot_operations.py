@@ -8,8 +8,21 @@ from snapshot_operations import SnapshotOperations, SnapshotError
 @pytest.fixture
 def mock_snapshot_operations():
     with patch('config.Config') as mock_config, \
-         patch('snapshot_operations.Elasticsearch'):
-        yield SnapshotOperations()
+         patch('snapshot_operations.Elasticsearch') as mock_es:
+        mock_config.return_value.elasticsearch_host = "https://localhost:9200"
+        mock_config.return_value.elasticsearch_username = "user"
+        mock_config.return_value.elasticsearch_password = "pass"
+        mock_config.return_value.repository_name = "repo"
+        mock_config.return_value.data_stream_pattern = "pattern"
+        mock_config.return_value.min_days_to_snapshot = 30
+        mock_config.return_value.min_days_to_delete_snapshot = 90
+        mock_config.return_value.delete_old_snapshots = True
+        mock_config.return_value.max_workers = 4
+        mock_client = mock_es.return_value
+        mock_client.indices.get_data_stream.return_value = {'data_streams': []}
+        mock_client.snapshot.get.return_value = {'snapshots': []}
+        
+        yield SnapshotOperations(mock_config.return_value)
 
 def test_get_data_streams_older_than_days_success(mock_snapshot_operations):
     mock_snapshot_operations.client.indices.get_data_stream.return_value = {
